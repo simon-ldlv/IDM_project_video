@@ -1,0 +1,12 @@
+VideoGen {
+	
+
+		optional videoseq v1 "mp4lol/denis.mp4"
+		optional videoseq v2 "mp4lol/cry.mp4"
+		optional videoseq v3 "mp4lol/mario.mp4"
+		optional videoseq v4 "mp4lol/fuck.mp4"
+		optional videoseq v5 "mp4lol/yoda.mp4"
+	
+	
+
+}

@@ -1,13 +1,16 @@
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.xtext.example.mydsl.videoGen.AlternativesMedia;
@@ -19,26 +22,104 @@ import org.xtext.example.mydsl.videoGen.VideoGeneratorModel;
 
 public class VideoGenStation {
 	
-	private static String folderVideo = "./mp4lol";
+	private static String folderVideo = "mp4lol";
 	
-	private static String folderVideogen = "./output/videogen";
+	private static String folderVideogen = "output/videogen";
 	
-	private static String folderVignette = "./output/vignette";
+	private static String folderVignette = "output/vignette";
 	
-	private static String folderGif = "./output/gif";
+	private static String folderGif = "output/gif";
 	
-	private static String folderPalette = "./output/palette";
+	private static String folderPalette = "output/palette";
 	
-	private static String folderArgs = "./ffmpeg_args";
+	private static String folderArgs = "ffmpeg_args";
 	
 	
-	static String genererLongestVideo(String modelFile){
+	static String genererLongestVideo(String pathModel){
 		
-		return null;
+
+		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+		String 	cmdFfmpeg_1 = "ffmpeg -f concat -safe 0 -i ";
+		String 	cmdFfmpeg_2 = " -framerate 30 -vcodec libx264 -acodec aac -ac 2 -strict -2 -c copy ";
+		String outputVideogenFile = folderArgs+"/videogen_"+timestamp.getTime()+".txt";
+		String outVideogenConcat = folderVideogen+"/videogen_"+timestamp.getTime()+".mp4";
+		
+		String cmdInfoVideo ="ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ";
+		MediaDescription longestVideoAlt = null;
+
+
+		try {
+			VideoGeneratorModel videoGen = new VideoGenHelper().loadVideoGenerator(URI.createURI(pathModel));
+			File fileOutput = new File(outputVideogenFile);
+			fileOutput.createNewFile();
+			FileWriter outWriter;
+				
+			outWriter = new FileWriter(fileOutput);		
+			assertNotNull(videoGen);
+			
+			EList<Media> medias = videoGen.getMedias();
+			for(Media med : medias) {
+				
+				String toWrite = "";
+				if (med instanceof AlternativesMedia) {
+					AlternativesMedia altMed = (AlternativesMedia) med;
+					EList<MediaDescription> mediaDescAlt = altMed.getMedias();
+					double maxDuration=-1;
+
+					for(MediaDescription media : mediaDescAlt) {
+						Process ps = Runtime.getRuntime().exec(cmdInfoVideo+new File(media.getLocation()).getAbsolutePath());  
+						ps.waitFor();
+
+						BufferedReader in = new BufferedReader(new InputStreamReader(ps.getInputStream()));
+						String line;
+						
+						while ((line = in.readLine()) != null) {
+							double currentDuration =  Double.parseDouble(line);
+							
+
+							if(currentDuration > maxDuration) {
+								
+								maxDuration = currentDuration;
+								longestVideoAlt = media;
+							}
+						}
+					}
+					if(longestVideoAlt!=null) {
+						toWrite = "file '../"+longestVideoAlt.getLocation()+"'";
+						outWriter.write(toWrite);
+						outWriter.write("\n");
+
+					}
+					
+				} else if ( med instanceof MandatoryMedia) {
+					toWrite = "file '../"+((MandatoryMedia) med).getDescription().getLocation()+"'";
+					outWriter.write(toWrite);
+					outWriter.write("\n");
+	
+	
+				} else if ( med instanceof OptionalMedia){
+					OptionalMedia optMed = (OptionalMedia) med;
+					toWrite = "file '../"+optMed.getDescription().getLocation()+"'";
+					outWriter.write(toWrite);
+					outWriter.write("\n");
+					
+				}
+			}
+			outWriter.close();
+			String cmdProcess = cmdFfmpeg_1+fileOutput.getAbsolutePath()+cmdFfmpeg_2+outVideogenConcat;
+			Process child = Runtime.getRuntime().exec(cmdProcess);
+			child.waitFor();
+			
+		} catch (/*IO*/Exception e) {
+			e.printStackTrace();
+		}   
+		
+		return outVideogenConcat;
+		
 	}
 	
 	
-	static String genererVideo(String modelFile){
+	static String genererVideoRandom(String pathModel){
 		
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		String 	cmdFfmpeg_1 = "ffmpeg -f concat -safe 0 -i ";
@@ -47,7 +128,7 @@ public class VideoGenStation {
 		String outVideogenConcat = folderVideogen+"/videogen_"+timestamp.getTime()+".mp4";
 
 		try {
-			VideoGeneratorModel videoGen = new VideoGenHelper().loadVideoGenerator(URI.createURI(modelFile));
+			VideoGeneratorModel videoGen = new VideoGenHelper().loadVideoGenerator(URI.createURI(pathModel));
 			File fileOutput = new File(outputVideogenFile);
 			fileOutput.createNewFile();
 			FileWriter outWriter;
@@ -94,25 +175,25 @@ public class VideoGenStation {
 		return outVideogenConcat;
 	}
 
-	static String genererGifWithVideo(String fileVideo)  {
-		File fVid = new File(fileVideo);
+	static String genererGifWithVideo(String pathVideo)  {
+		File fVid = new File(pathVideo);
 		
 		if(!fVid.exists() || fVid.isDirectory() ) {
-			throw new IllegalArgumentException("ERREUR : "+fileVideo+" n'est pas un fichier valide");
+			throw new IllegalArgumentException("ERREUR : "+pathVideo+" n'est pas un fichier valide");
 		}
 		
 	
 		String cmdGifPalette1 = "ffmpeg -y -i ";
-		String cmdGifPalette2 = " -vf fps=10,scale=320:-1:flags=lanczos,palettegen ";
+		String cmdGifPalette2 = " -vf fps=5,scale=160:-1:flags=lanczos,palettegen ";
 		
 		String gifFileNamePalette = folderPalette+"/"+fVid.getName()+".palette.png";
 		String gifFileName = folderGif+"/"+fVid.getName()+".gif";
 		
 		String cmdGifGenerate1 = "ffmpeg -i ";
 		String cmdGifGenerate2 = " -i ";
-		String cmdGifGenerate3 =" -filter_complex fps=10,scale=320:-1:flags=lanczos[x];[x][1:v]paletteuse ";
+		String cmdGifGenerate3 =" -filter_complex fps=5,scale=160:-1:flags=lanczos[x];[x][1:v]paletteuse ";
 				
-		String cmdGifPalette = cmdGifPalette1+fileVideo+cmdGifPalette2+gifFileNamePalette;
+		String cmdGifPalette = cmdGifPalette1+pathVideo+cmdGifPalette2+gifFileNamePalette;
 		System.out.println(cmdGifPalette);
 
 		Process processGifPalette = null;
@@ -125,7 +206,7 @@ public class VideoGenStation {
 			assertTrue(fileGifPalette.exists());
 			assertTrue(!fileGifPalette.isDirectory());
 			
-			String cmdGif = cmdGifGenerate1+fileVideo+cmdGifGenerate2+gifFileNamePalette+cmdGifGenerate3+gifFileName;
+			String cmdGif = cmdGifGenerate1+pathVideo+cmdGifGenerate2+gifFileNamePalette+cmdGifGenerate3+gifFileName;
 			Process processGif = Runtime.getRuntime().exec(cmdGif);
 		
 			processGif.waitFor();
@@ -139,9 +220,9 @@ public class VideoGenStation {
 	}
 	
 	
-	static ArrayList<String> genererVignette(String modelFile){
+	static ArrayList<String> genererVignette(String pathModel){
 		
-		VideoGeneratorModel videoGen = new VideoGenHelper().loadVideoGenerator(URI.createURI(modelFile));
+		VideoGeneratorModel videoGen = new VideoGenHelper().loadVideoGenerator(URI.createURI(pathModel));
 		assertNotNull(videoGen);
 		
 		ArrayList<String> listVignettePath = new ArrayList<String>();
@@ -149,32 +230,16 @@ public class VideoGenStation {
 		String cmdVignette_1 = "ffmpeg -ss 00:00:01 -i ";
 		String cmdVignette_2 = " -vframes 1 -q:v 2 ";
 
-		EList<Media> medias = videoGen.getMedias();
-		for(Media med : medias) {
-			
-			if (med instanceof AlternativesMedia) {
-				AlternativesMedia altMed = (AlternativesMedia) med;
-				for(MediaDescription desc : altMed.getMedias()) {
-					String pathVignette = (new File(desc.getLocation())).getName()+".jpg";
-					auxGenererVignettes(cmdVignette_1+desc.getLocation()+cmdVignette_2, folderVignette+"/"+pathVignette);
-					listVignettePath.add(folderVignette+"/"+pathVignette);
-				}
-			} else if ( med instanceof MandatoryMedia) {
-				MandatoryMedia mandMed = (MandatoryMedia) med;
-				String pathVignette = (new File(mandMed.getDescription().getLocation())).getName()+".jpg";
-
-				auxGenererVignettes(cmdVignette_1+mandMed.getDescription().getLocation()+cmdVignette_2, folderVignette+"/"+pathVignette);
-				listVignettePath.add(folderVignette+"/"+pathVignette);
-
-			} else if ( med instanceof OptionalMedia){
-				
-				OptionalMedia optMed = (OptionalMedia) med;
-				String pathVignette = (new File(optMed.getDescription().getLocation())).getName()+".jpg";
-
-				auxGenererVignettes(cmdVignette_1+optMed.getDescription().getLocation()+cmdVignette_2, folderVignette+"/"+pathVignette);
-				listVignettePath.add(folderVignette+"/"+pathVignette);
-			}	
-		}
+		File folder = new File (folderVideo);
+		for (File fileEntry : folder.listFiles()) {
+			 
+		        if (!fileEntry.isDirectory() && FilenameUtils.getExtension(fileEntry.getAbsolutePath()).equals("mp4")){
+		        	String outVignette = folderVignette+"/"+fileEntry.getName()+".jpg";
+		        	auxGenererVignettes(cmdVignette_1 + fileEntry.getAbsolutePath() + cmdVignette_2,outVignette);
+		        	listVignettePath.add(outVignette);
+		        }
+		    }
+		
 		return listVignettePath;
 	}
 

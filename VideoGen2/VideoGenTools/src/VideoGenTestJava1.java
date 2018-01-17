@@ -21,90 +21,78 @@ import org.xtext.example.mydsl.videoGen.VideoGeneratorModel;
 
 public class VideoGenTestJava1 {
 	
-	//@Test
-	public void testGenerateMostLongVideo() {
-		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-		String 	cmdFfmpeg_1 = "ffmpeg -f concat -safe 0 -i ";
-		String 	cmdFfmpeg_2 = " -framerate 30 -vcodec libx264 -acodec aac -ac 2 -strict -2 -c copy ";
-		String configVideogen = "example1.videogen";
-		String outputVideogenFile = "ffmpeg_args/videogen_"+timestamp.getTime()+".txt";
-		String outVideogenConcat = "output/videogen/videogen_"+timestamp.getTime()+".mp4";
+	
+	@Test
+	public void testGenerateVideo2LongestAndGif() {
+	
+		String configVideogen = "example2.videogen";
 		
-		String cmdInfoVideo ="ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ";
-		MediaDescription longestVideoAlt = null;
+		String outVideogenConcat = VideoGenStation.genererLongestVideo(configVideogen);
+		
+		File f = new File(outVideogenConcat);
+		assertTrue(f.exists());
+		assertTrue(!f.isDirectory());
+		
+		String outVideoGif = VideoGenStation.genererGifWithVideo(outVideogenConcat);
 
-		try {
-			VideoGeneratorModel videoGen = new VideoGenHelper().loadVideoGenerator(URI.createURI(configVideogen));
-			File fileOutput = new File(outputVideogenFile);
-			fileOutput.createNewFile();
-			FileWriter outWriter;
-					
-			outWriter = new FileWriter(fileOutput);		
-			assertNotNull(videoGen);
-			
-			EList<Media> medias = videoGen.getMedias();
-			for(Media med : medias) {
-				String toWrite = "";
-				if (med instanceof AlternativesMedia) {
-					AlternativesMedia altMed = (AlternativesMedia) med;
-					EList<MediaDescription> mediaDescAlt = altMed.getMedias();
-					
-					for(MediaDescription media : mediaDescAlt) {
-						Process ps = Runtime.getRuntime().exec(cmdInfoVideo+new File(media.getLocation()).getAbsolutePath());  
-						BufferedReader in = new BufferedReader(new InputStreamReader(ps.getInputStream()));
-						String line;
-						double maxDuration=-1;
-						
-						while ((line = in.readLine()) != null) {
-							double currentDuration =  Double.parseDouble(line);
-							if(currentDuration > maxDuration) {
-								maxDuration = currentDuration;
-								longestVideoAlt = media;
-							}
-						}
-						ps.waitFor();
-					}
-					if(longestVideoAlt!=null) {
-						toWrite = "file '../"+longestVideoAlt.getLocation()+"'";
-						outWriter.write(toWrite);
-						outWriter.write("\n");
-
-					}
-					
-				} else if ( med instanceof MandatoryMedia) {
-					toWrite = "file '../"+((MandatoryMedia) med).getDescription().getLocation()+"'";
-					outWriter.write(toWrite);
-					outWriter.write("\n");
-	
-	
-				} else if ( med instanceof OptionalMedia){
-					OptionalMedia optMed = (OptionalMedia) med;
-					toWrite = "file '../"+optMed.getDescription().getLocation()+"'";
-					outWriter.write(toWrite);
-					outWriter.write("\n");
-					
-				}
-				//System.out.println(toWrite);
-			}
-			outWriter.close();
-			String cmdProcess = cmdFfmpeg_1+fileOutput.getAbsolutePath()+cmdFfmpeg_2+outVideogenConcat;
-			//System.out.println(cmdProcess);
-			Process child = Runtime.getRuntime().exec(cmdProcess);
-			child.waitFor();
-			File f = new File(outVideogenConcat);
-			assertTrue(f.exists());
-			assertTrue(!f.isDirectory());
-			
-		} catch (/*IO*/Exception e) {
-			e.printStackTrace();
-		}   
+		File fileGifPalette = new File(outVideoGif);
+		assertTrue(fileGifPalette.exists());
+		assertTrue(!fileGifPalette.isDirectory());
+		
 	}
 	
 	@Test
-	public void testGenerateVideogen1() {
+	public void testGenerateVideo1Longest() {
+	
 		String configVideogen = "example1.videogen";
 		
-		String outVideogenConcat = VideoGenStation.genererVideo(configVideogen);
+		String outVideogenConcat = VideoGenStation.genererLongestVideo(configVideogen);
+		
+		File f = new File(outVideogenConcat);
+		assertTrue(f.exists());
+		assertTrue(!f.isDirectory());
+		
+	}
+	
+	@Test
+	public void testGenerateVideo2Longest() {
+	
+		String configVideogen = "example2.videogen";
+		
+		String outVideogenConcat = VideoGenStation.genererLongestVideo(configVideogen);
+		
+		File f = new File(outVideogenConcat);
+		assertTrue(f.exists());
+		assertTrue(!f.isDirectory());
+		
+	}
+	
+	
+	@Test
+	public void testGenerateVideo3Longest() {
+	
+		String configVideogen = "example3.videogen";
+		
+		String outVideogenConcat = VideoGenStation.genererLongestVideo(configVideogen);
+		
+		File f = new File(outVideogenConcat);
+		assertTrue(f.exists());
+		assertTrue(!f.isDirectory());
+		
+		/*Process child;
+		try {
+			child = Runtime.getRuntime().exec("vlc "+f.getAbsolutePath());
+			child.waitFor();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}*/
+	}
+	
+	@Test
+	public void testGenerateVideo1Random() {
+		String configVideogen = "example1.videogen";
+		
+		String outVideogenConcat = VideoGenStation.genererVideoRandom(configVideogen);
 		
 		File f = new File(outVideogenConcat);
 		assertTrue(f.exists());
@@ -113,10 +101,10 @@ public class VideoGenTestJava1 {
 	}
 	
 	@Test
-	public void testGenerateVideoAndGif() {
+	public void testGenerateVideo1RandomAndGif() {
 		String configVideogen = "example1.videogen";
 
-		String outVideogenConcat = VideoGenStation.genererVideo(configVideogen);
+		String outVideogenConcat = VideoGenStation.genererVideoRandom(configVideogen);
 		
 		File f = new File(outVideogenConcat);
 		assertTrue(f.exists());
@@ -129,7 +117,87 @@ public class VideoGenTestJava1 {
 		assertTrue(!fileGifPalette.isDirectory());
 
 	}
+	
+	@Test
+	public void testGenerateVideo4RandomAndGif() {
+		String configVideogen = "example4.videogen";
+
+		String outVideogenConcat = VideoGenStation.genererVideoRandom(configVideogen);
 		
+		File f = new File(outVideogenConcat);
+		assertTrue(f.exists());
+		assertTrue(!f.isDirectory());
+		
+		String outVideoGif = VideoGenStation.genererGifWithVideo(outVideogenConcat);
+
+		File fileGifPalette = new File(outVideoGif);
+		assertTrue(fileGifPalette.exists());
+		assertTrue(!fileGifPalette.isDirectory());
+
+		
+		Process child;
+		try {
+			child = Runtime.getRuntime().exec("vlc "+f.getAbsolutePath());
+			child.waitFor();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	@Test
+	public void testGenerateVideo5RandomAndGif() {
+		String configVideogen = "example5.videogen";
+
+		String outVideogenConcat = VideoGenStation.genererVideoRandom(configVideogen);
+		
+		File f = new File(outVideogenConcat);
+		assertTrue(f.exists());
+		assertTrue(!f.isDirectory());
+		
+		String outVideoGif = VideoGenStation.genererGifWithVideo(outVideogenConcat);
+
+		File fileGifPalette = new File(outVideoGif);
+		assertTrue(fileGifPalette.exists());
+		assertTrue(!fileGifPalette.isDirectory());
+
+		
+		Process child;
+		try {
+			child = Runtime.getRuntime().exec("vlc "+f.getAbsolutePath());
+			child.waitFor();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+		
+	
+	@Test
+	public void testGenerateVideo5LongestAndGif() {
+		String configVideogen = "example5.videogen";
+
+		String outVideogenConcat = VideoGenStation.genererLongestVideo(configVideogen);
+		
+		File f = new File(outVideogenConcat);
+		assertTrue(f.exists());
+		assertTrue(!f.isDirectory());
+		
+		String outVideoGif = VideoGenStation.genererGifWithVideo(outVideogenConcat);
+
+		File fileGifPalette = new File(outVideoGif);
+		assertTrue(fileGifPalette.exists());
+		assertTrue(!fileGifPalette.isDirectory());
+
+		
+		Process child;
+		try {
+			child = Runtime.getRuntime().exec("vlc "+f.getAbsolutePath());
+			child.waitFor();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
 		
 	@Test
@@ -139,7 +207,7 @@ public class VideoGenTestJava1 {
 	}
 
 	@Test
-	public void testGenererVignettes() {
+	public void testGenererAllVignettes() {
 
 		
 		String configModel = "example1.videogen";
@@ -153,6 +221,5 @@ public class VideoGenTestJava1 {
 			assertTrue(!f.isDirectory());
 		});
 	}
-	
 }
 
