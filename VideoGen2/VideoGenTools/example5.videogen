@@ -1,0 +1,30 @@
+VideoGen {
+	
+	mandatory videoseq v1 "mp4lol/neige.mp4"
+	alternatives v2 {
+		videoseq v2a "mp4lol/mario.mp4"
+		videoseq v2b "mp4lol/no.mp4"
+	}
+	mandatory videoseq v3 "mp4lol/beep.mp4"
+	alternatives v4 {
+		videoseq v4a "mp4lol/yoda.mp4"
+		videoseq v4b "mp4lol/computer.mp4"
+	}
+	mandatory videoseq v5 "mp4lol/neige.mp4"
+	optional videoseq v6 "mp4lol/cry.mp4"
+	mandatory videoseq v7 "mp4lol/neige.mp4"
+	alternatives v8 {
+		videoseq v8a "mp4lol/fuck.mp4"
+		videoseq v8b "mp4lol/treasure.mp4"
+	}
+	mandatory videoseq v9 "mp4lol/smtv.mp4"
+	optional videoseq v10 "mp4lol/denis.mp4"
+	mandatory videoseq v11 "mp4lol/beep.mp4"
+	alternatives v12 {
+		videoseq v12a "mp4lol/skyrim.mp4"
+		videoseq v12b "mp4lol/robot.mp4"
+	}
+	
+	
+
+}
