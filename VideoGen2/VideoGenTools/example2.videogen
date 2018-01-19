@@ -1,6 +1,6 @@
 VideoGen {
 	
-	optional videoseq v2 "mp4lol/musclor.mp4"
+	optional videoseq v2 "mp4lol/mario.mp4"
 	mandatory videoseq v1 "mp4lol/fuck.mp4"
 	optional videoseq v2 "mp4lol/no.mp4"
 }

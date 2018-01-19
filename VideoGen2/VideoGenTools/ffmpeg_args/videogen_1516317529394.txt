@@ -1,0 +1,4 @@
+file '../mp4lol/mario.mp4'
+file '../mp4lol/computer.mp4'
+file '../mp4lol/no.mp4'
+file '../mp4lol/yoda.mp4'
