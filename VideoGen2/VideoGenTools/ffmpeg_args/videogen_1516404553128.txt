@@ -1,0 +1,3 @@
+file '../mp4lol/mario.mp4'
+file '../mp4lol/fuck.mp4'
+file '../mp4lol/no.mp4'

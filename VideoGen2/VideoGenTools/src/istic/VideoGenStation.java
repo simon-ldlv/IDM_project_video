@@ -195,10 +195,11 @@ public class VideoGenStation {
 				}
 			}
 			outWriter.close();
+			
 			String cmdProcess = cmdFfmpeg_1+fileOutput.getAbsolutePath()+cmdFfmpeg_2+outVideogenConcat;
 			Process child = Runtime.getRuntime().exec(cmdProcess);
 			child.waitFor();
-			
+			System.out.println(cmdProcess);
 		} catch (/*IO*/Exception e) {
 			e.printStackTrace();
 		}   

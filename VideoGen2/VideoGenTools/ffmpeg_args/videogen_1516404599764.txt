@@ -1,0 +1,3 @@
+file '../mp4lol/denis.mp4'
+file '../mp4lol/treasure.mp4'
+file '../mp4lol/mario.mp4'
